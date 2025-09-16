@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Verse</title>
+
+  <!-- Tailwind CSS for modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts for a stylish look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-image: url('https://images.pexels.com/photos/1684151/pexels-photo-1684151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      transition: background-image 0.5s ease-in-out;
+    }
+
+    .glass-container {
+      background: rgba(14, 18, 32, 0.8);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Custom aspect-ratio wrapper so the iframe is always visible without Tailwind's aspect plugin */
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      border-radius: 0.5rem; /* rounded-lg */
+      overflow: hidden;
+    }
+    .video-wrap iframe {
+      position: absolute;
+     inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #ec4899; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+    #videoModal { transition: opacity 0.3s ease; }
+    .modal-content { transition: transform 0.3s ease; }
+      /* 🐼 Panda helper widget + idle animation */
+    #pandaWidget{position:fixed;bottom:1rem;right:1rem;z-index:60;display:flex;align-items:flex-end;gap:.75rem}
+    .panda-avatar{width:72px;height:72px;border-radius:9999px;background:#111827;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);transition:transform .25s ease}
+    .panda-avatar:hover{transform:scale(1.03)}
+    .panda-avatar svg{width:56px;height:56px;animation:pandaBop 3s ease-in-out infinite alternate}
+    @keyframes pandaBop{from{transform:translateY(0) rotate(0)}to{transform:translateY(-2px) rotate(1.5deg)}}
+    .panda-bubble{position:relative;background:rgba(30,41,59,.95);color:#fdf2f8;border:1px solid rgba(255,255,255,.12);padding:.75rem 1rem;border-radius:.75rem;max-width:260px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+    .panda-bubble:after{content:"";position:absolute;right:-10px;bottom:14px;width:0;height:0;border-left:10px solid rgba(30,41,59,.95);border-top:10px solid transparent;border-bottom:10px solid transparent}
+    .panda-min{position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:6px;background:#334155;color:#fff;line-height:1}
+    .panda-show{position:fixed;bottom:6.5rem;right:1rem;display:none;background:#334155;color:#fff;border:none;border-radius:.5rem;padding:.35rem .5rem;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+    .panda-btn{background:#ec4899;color:#fff;border:none;border-radius:.5rem;padding:.4rem .75rem;font-weight:600}
+    .panda-btn.secondary{background:#334155}
+    #pandaChat{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:70;padding:1rem}
+    #pandaChat .panel{width:100%;max-width:720px;border-radius:1rem;background:rgba(14,18,32,.95);border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45)}
+    #pandaChat .panel-inner{padding:1rem}
+    #pandaChat .head{display:flex;gap:1rem;align-items:center;padding:1rem;border-bottom:1px solid rgba(255,255,255,.08)}
+    #pandaChat .title{color:#f9a8d4;font-weight:800;font-size:1.25rem}
+    #pandaChat .choices{display:flex;flex-wrap:wrap;gap:.5rem}
+    #pandaChat .chip{background:#334155;color:#fff;border:none;padding:.5rem .75rem;border-radius:9999px}
+    #pandaChat .cta{margin-top:1rem;display:flex;gap:.5rem}
+    #pandaChat .close-x{position:absolute;top:.75rem;right:.75rem;width:2rem;height:2rem;border-radius:9999px;background:#ef4444;color:#fff;display:grid;place-items:center;border:none}
+    .audio-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+    .audio-row select{background:#111827;color:#e5e7eb;border:1px solid #374151;border-radius:.5rem;padding:.5rem .75rem}
+  </style>
+</head>
+<body id="mainBody" class="text-slate-200">
+  <div class="container mx-auto p-4 md:p-8">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl md:text-6xl font-bold text-white mb-2">
+        Study Verse
+      </h1>
+      <p class="text-slate-400 text-lg">Your all-access pass to video lessons and study guides (and a bit of K-pop fun 🎶).</p>
+    </header>
+
+    <main class="glass-container rounded-2xl p-6 md:p-8 shadow-2xl">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="lg:col-span-3">
+          <label for="searchBar" class="block mb-2 text-sm font-medium text-pink-300">Search Topics</label>
+          <div class="relative">
+            <input type="text" id="searchBar" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition" placeholder="e.g., Photosynthesis, TXT, Python loops..." />
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+          </div>
+        </div>
+        <div>
+          <label for="subjectSelector" class="block mb-2 text-sm font-medium text-pink-300">Subject</label>
+          <select id="subjectSelector" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+            <option value="all">All Subjects</option>
+            <option value="math">Mathematics</option>
+            <option value="science">Science</option>
+            <option value="computerscience">Computer Science</option>
+            <option value="english">English & Writing</option>
+            <option value="kpop">K-Pop</option>
+          </select>
+        </div>
+        <div>
+          <label for="gradeSelector" class="block mb-2 text-sm font-medium text-pink-300">Grade Level</label>
+          <select id="gradeSelector" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+            <option value="all">All Grades</option>
+            <option value="9">9th Grade</option>
+            <option value="10">10th Grade</option>
+            <option value="11">11th Grade</option>
+            <option value="12">12th Grade</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="linksContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-3 text-center py-12">
+          <p class="text-slate-500">Use the filters to find your study materials or K-pop favorites!</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Video Player Modal -->
+  <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+    <div class="modal-content glass-container w-full max-w-5xl rounded-2xl shadow-2xl p-6 relative transform scale-95">
+      <button id="closeModal" aria-label="Close video" class="absolute -top-2 -right-2 w-8 h-8 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition">&times;</button>
+      <h3 id="modalTitle" class="text-2xl font-bold text-pink-400 mb-4">Modal Title</h3>
+
+      <div class="video-wrap mb-4">
+        <iframe id="videoFrame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+
+      <p id="modalDescription" class="text-slate-400 mb-6">Description goes here.</p>
+      <a id="studyGuideLink" href="#" target="_blank" rel="noopener noreferrer" class="w-full block text-center bg-pink-500 text-white font-semibold py-3 rounded-lg hover:bg-pink-600 transition">
+        <i class="fa-solid fa-book-open-reader mr-2"></i> View Page
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Content database ----------
+    const studyData = [
+      // --- MATH ---
+      { subject: 'math', grade: 9, title: 'Intro to Algebra', description: 'Understand variables, equations, and functions.', videoId: 'NybHckSEQBI', studyGuideUrl: 'https://tutorial.math.lamar.edu/classes/alg/alg.aspx' },
+      { subject: 'math', grade: 10, title: 'Geometry: Triangles', description: 'Learn about the properties and theorems of triangles.', videoId: 'q7vI2oXL0gQ', studyGuideUrl: 'https://www.mathsisfun.com/geometry/triangles.html' },
+
+      // --- SCIENCE ---
+      { subject: 'science', grade: 9, title: 'Photosynthesis Explained', description: 'How plants use sunlight to create energy.', videoId: 'CMiPYHNNg28', studyGuideUrl: 'https://www.khanacademy.org/science/biology/photosynthesis-in-plants' },
+
+      // --- COMPUTER SCIENCE ---
+      { subject: 'computerscience', grade: 10, title: 'Intro to Python', description: 'Start your programming journey with Python.', videoId: 'kqtD5dpn9C8', studyGuideUrl: 'https://www.learnpython.org/' },
+
+      // --- ENGLISH ---
+      { subject: 'english', grade: 11, title: 'Writing a Thesis Statement', description: 'Craft a strong, arguable thesis for your essays.', videoId: 'LKXkemYldmw', studyGuideUrl: 'https://owl.purdue.edu/owl/general_writing/academic_writing/establishing_arguments/index.html' },
+
+      // --- KPOP (fixed incorrect IDs) ---
+      { subject: 'kpop', grade: 'all', title: 'TXT – CROWN', description: 'Debut hit that introduced TXT.', videoId: 'W3iSnJ663II', studyGuideUrl: 'https://ibighit.com/txt/eng/' },
+      { subject: 'kpop', grade: 'all', title: 'BTS – Dynamite', description: 'Record-breaking disco-pop anthem.', videoId: 'gdZLi9oWNZg', studyGuideUrl: 'https://ibighit.com/bts/eng/' },
+      { subject: 'kpop', grade: 'all', title: 'Stray Kids – God’s Menu', description: 'The bold song that made Stray Kids global stars.', videoId: 'TQTlCHxyuu8', studyGuideUrl: 'https://straykids.jype.com/' },
+      { subject: 'kpop', grade: 'all', title: 'SEVENTEEN – Left & Right', description: 'An upbeat, catchy track from their 7th mini album.', videoId: 'HdZdxocqzq4', studyGuideUrl: 'https://seventeen-17.com/' },
+      { subject: 'kpop', grade: 'all', title: 'EXO – Growl', description: 'Iconic song that pushed EXO into superstardom.', videoId: 'I3dezFzsNss', studyGuideUrl: 'https://exo.smtown.com/' },
+      { subject: 'kpop', grade: 'all', title: 'BLACKPINK – DDU-DU DDU-DU', description: 'The track that cemented BLACKPINK as global icons.', videoId: 'IHNzOHi8sJs', studyGuideUrl: 'https://www.blackpinkofficial.com/' },
+      { subject: 'kpop', grade: 'all', title: 'TWICE – The Feels', description: 'A vibrant and fun English single.', videoId: '7C2z4GqqS5E', studyGuideUrl: 'https://twice.jype.com/' },
+      { subject: 'kpop', grade: 'all', title: 'ITZY – DALLA DALLA', description: "ITZY's powerful and confident debut song.", videoId: 'pNfTK39k55U', studyGuideUrl: 'https://itzy.jype.com/' },
+    ];
+
+    // ---------- Background images ----------
+    const studyBgUrl = 'https://images.pexels.com/photos/1684151/pexels-photo-1684151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+    // Reliable K-pop vibe background (fallback-safe)
+    const kpopBgPrimary = 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+    const kpopBgFallback = studyBgUrl;
+
+    // ---------- DOM refs ----------
+    const mainBody = document.getElementById('mainBody');
+    const subjectSelector = document.getElementById('subjectSelector');
+    const gradeSelector = document.getElementById('gradeSelector');
+    const searchBar = document.getElementById('searchBar');
+    const linksContainer = document.getElementById('linksContainer');
+
+    const videoModal = document.getElementById('videoModal');
+    const closeModal = document.getElementById('closeModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const videoFrame = document.getElementById('videoFrame');
+    const modalDescription = document.getElementById('modalDescription');
+    const studyGuideLink = document.getElementById('studyGuideLink');
+
+    // ---------- Helper: robust YouTube embed builder (handles raw ID, ID+query, or full URL) ----------
+    function buildYouTubeEmbed(videoIdOrUrl) {
+      const input = (videoIdOrUrl || '').trim();
+      try {
+        // Full URL path (watch, youtu.be, shorts, etc.)
+        if (input.startsWith('http')) {
+          const u = new URL(input);
+          // Try standard v param first
+          let id = u.searchParams.get('v');
+          if (!id) {
+            const parts = u.pathname.split('/').filter(Boolean);
+            // youtu.be/<id>, /embed/<id>, /shorts/<id>
+            id = parts[0] === 'embed' || parts[0] === 'shorts' ? parts[1] : parts.pop();
+          }
+          // Rebuild remaining query (keep playlist/time params)
+          u.searchParams.delete('v');
+          const rest = u.searchParams.toString();
+          return `https://www.youtube.com/embed/${encodeURIComponent(id)}${rest ? `?${rest}` : ''}`;
+        }
+        // Raw ID that might include ? or & params (e.g., "ID?list=..." or "ID&list=...&t=10s")
+        const qIndex = Math.max(input.indexOf('?'), input.indexOf('&'));
+        const id = qIndex === -1 ? input : input.slice(0, qIndex);
+        const params = qIndex === -1 ? '' : input.slice(qIndex + 1);
+        return `https://www.youtube.com/embed/${encodeURIComponent(id)}${params ? `?${params}` : ''}`;
+      } catch (e) {
+        // Fallback: best-effort embed
+        return `https://www.youtube.com/embed/${encodeURIComponent(input)}`;
+      }
+    }
+
+    // ---------- Modal show/hide ----------
+    function showModal() {
+      videoModal.classList.remove('opacity-0');
+      videoModal.style.pointerEvents = 'auto';
+      videoModal.querySelector('.modal-content').classList.remove('scale-95');
+    }
+    function hideModal() {
+      videoModal.classList.add('opacity-0');
+      videoModal.style.pointerEvents = 'none';
+      videoModal.querySelector('.modal-content').classList.add('scale-95');
+      // Stop the video
+      videoFrame.src = '';
+    }
+
+    // ---------- Background setter with safe fallback ----------
+    function setSubjectBackground(subject) {
+      if (subject === 'kpop') {
+        const img = new Image();
+        img.onload = () => { document.body.style.backgroundImage = `url('${kpopBgPrimary}')`; };
+        img.onerror = () => { document.body.style.backgroundImage = `url('${kpopBgFallback}')`; };
+        img.src = kpopBgPrimary;
+      } else {
+        document.body.style.backgroundImage = `url('${studyBgUrl}')`;
+      }
+    }
+
+    // ---------- Render logic ----------
+    const displayLinks = () => {
+      const subject = subjectSelector.value;
+      const grade = gradeSelector.value;
+      const searchTerm = searchBar.value.toLowerCase();
+
+      setSubjectBackground(subject);
+      linksContainer.innerHTML = '';
+
+      const filteredData = studyData.filter((item) => {
+        const subjectMatch = subject === 'all' || item.subject === subject;
+        const gradeMatch = grade === 'all' || item.grade == grade || item.grade === 'all';
+        const searchMatch = item.title.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm);
+        return subjectMatch && gradeMatch && searchMatch;
+      });
+
+      if (filteredData.length > 0) {
+        filteredData.forEach((item, index) => {
+          const linkCard = document.createElement('button');
+          linkCard.type = 'button';
+          linkCard.className = 'text-left glass-container p-5 rounded-lg border border-slate-700 transition-all duration-300 hover:border-pink-500 hover:scale-[1.03] cursor-pointer fade-in focus:outline-none focus:ring-2 focus:ring-pink-500';
+          linkCard.style.animationDelay = `${index * 50}ms`;
+          linkCard.innerHTML = `
+            <h3 class="font-semibold text-pink-400 truncate">${item.title}</h3>
+            <p class="text-slate-400 mt-1 text-sm h-10 overflow-hidden">${item.description}</p>
+            <div class="text-xs text-slate-500 mt-2"><span class="bg-slate-700/50 px-2 py-1 rounded">${item.subject.toUpperCase()}</span></div>
+          `;
+          linkCard.addEventListener('click', () => openVideoModal(item));
+          linksContainer.appendChild(linkCard);
+        });
+      } else {
+        linksContainer.innerHTML = `<div class="lg:col-span-3 text-center py-12"><p class="text-slate-500">No resources found. Try broadening your filters!</p></div>`;
+      }
+    };
+
+    const openVideoModal = (item) => {
+      modalTitle.textContent = item.title;
+      modalDescription.textContent = item.description;
+      videoFrame.src = buildYouTubeEmbed(item.videoId);
+      studyGuideLink.href = item.studyGuideUrl || '#';
+      showModal();
+    };
+
+    const closeVideoModal = () => hideModal();
+
+    // ---------- Event hooks ----------
+    subjectSelector.addEventListener('change', displayLinks);
+    gradeSelector.addEventListener('change', displayLinks);
+    searchBar.addEventListener('input', displayLinks);
+    closeModal.addEventListener('click', closeVideoModal);
+    videoModal.addEventListener('click', (event) => { if (event.target === videoModal) closeVideoModal(); });
+
+    // Initial render
+    displayLinks();
+  </script>
+  <!-- 🐼 Panda Helper Widget -->
+  <div id="pandaWidget" aria-live="polite">
+    <div class="panda-bubble" id="pandaBubble">
+      <button id="pandaMin" class="panda-min" title="Minimize">⌄</button>
+      <div class="text-sm mb-2">Need any help?</div>
+      <div class="flex gap-2">
+        <button id="pandaYes" class="panda-btn">Yes</button>
+        <button id="pandaNo" class="panda-btn secondary">No</button>
+      </div>
+    </div>
+    <button class="panda-avatar" id="pandaAvatar" title="Open Panda Helper" type="button">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="panda">
+        <circle cx="32" cy="32" r="28" fill="#fff"/>
+        <circle cx="20" cy="22" r="8" fill="#111"/>
+        <circle cx="44" cy="22" r="8" fill="#111"/>
+        <circle cx="25" cy="26" r="5" fill="#fff"/>
+        <circle cx="39" cy="26" r="5" fill="#fff"/>
+        <circle cx="25" cy="27" r="2.2" fill="#000"/>
+        <circle cx="39" cy="27" r="2.2" fill="#000"/>
+        <circle cx="32" cy="37" r="3" fill="#000"/>
+        <path d="M20 45c4 4 20 4 24 0" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <button id="pandaShowBubble" class="panda-show" title="Show help">▲</button>
+
+  <!-- Panda Chat Overlay -->
+  <div id="pandaChat" role="dialog" aria-modal="true" aria-label="Panda Study Helper">
+    <div class="panel relative">
+      <button class="close-x" id="pandaClose" title="Close">×</button>
+      <div class="head">
+        <div class="panda-avatar" style="width:64px;height:64px"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="28" fill="#fff"/><circle cx="20" cy="22" r="8" fill="#111"/><circle cx="44" cy="22" r="8" fill="#111"/><circle cx="25" cy="26" r="5" fill="#fff"/><circle cx="39" cy="26" r="5" fill="#fff"/><circle cx="25" cy="27" r="2.2" fill="#000"/><circle cx="39" cy="27" r="2.2" fill="#000"/><circle cx="32" cy="37" r="3" fill="#000"/><path d="M20 45c4 4 20 4 24 0" stroke="#111" stroke-width="3" stroke-linecap="round"/></svg></div>
+        <div class="title">Panda Study Buddy</div>
+        <div class="ml-auto"><button id="pandaBackToStudy" class="panda-btn secondary" type="button">Back to study</button></div>
+      </div>
+      <div class="panel-inner">
+        <div id="pandaStepSubject">
+          <p class="text-slate-300 mb-3">Which subject are you studying?</p>
+          <div class="choices" id="pandaSubjectChoices"></div>
+        </div>
+        <div id="pandaStepAdvice" class="hidden">
+          <p id="pandaAdvice" class="text-slate-200"></p>
+          <div class="cta"><button id="pandaBye" class="panda-btn">Thank you, bye!</button></div>
+        </div>
+        <div id="pandaStepMusicAsk" class="hidden">
+          <p class="text-slate-300 mb-2">Before I go, would you like some music to help you study?</p>
+          <div class="choices">
+            <button id="pandaMusicYes" class="panda-btn">Yes</button>
+            <button id="pandaMusicNo" class="panda-btn secondary">No</button>
+          </div>
+        </div>
+        <div id="pandaStepMusicPick" class="hidden">
+          <div class="audio-row mb-2">
+            <label for="pandaSongSelect" class="text-slate-300">Choose a K‑pop song:</label>
+            <select id="pandaSongSelect"></select>
+            <button id="pandaPlay" class="panda-btn">Play</button>
+            <label class="text-slate-300 flex items-center gap-2"><input id="pandaLonger" type="checkbox"/> Longer mix</label>
+          </div>
+          <audio id="pandaAudio" controls preload="none"></audio>
+          <p id="pandaAudioMsg" class="text-xs text-slate-400 mt-2"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Override embed builder to use youtube-nocookie for reliability -->
+  <script>
+    (function(){
+      window.buildYouTubeEmbed = function(videoIdOrUrl){
+        var input = (videoIdOrUrl || '').trim();
+        try{
+          if(input.indexOf('http') === 0){
+            var u = new URL(input);
+            var id = u.searchParams.get('v');
+            if(!id){
+              var parts = u.pathname.split('/').filter(Boolean);
+              id = (parts[0]==='embed' || parts[0]==='shorts') ? parts[1] : parts[parts.length-1];
+            }
+            u.searchParams.delete('v');
+            var rest = u.searchParams.toString();
+            return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + (rest ? '?' + rest : '');
+          }
+          var qIndex = Math.max(input.indexOf('?'), input.indexOf('&'));
+          var idOnly = qIndex === -1 ? input : input.slice(0, qIndex);
+          var params = qIndex === -1 ? '' : input.slice(qIndex + 1);
+          return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(idOnly) + (params ? '?' + params : '');
+        }catch(e){
+          return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(input);
+        }
+      };
+    })();
+  </script>
+
+  <!-- Panda JS (separate block to avoid regex escaping issues) -->
+  <script>
+    (function(){
+      var pandaBubble = document.getElementById('pandaBubble');
+      var pandaShowBubble = document.getElementById('pandaShowBubble');
+      var pandaMin = document.getElementById('pandaMin');
+      var pandaYes = document.getElementById('pandaYes');
+      var pandaNo = document.getElementById('pandaNo');
+      var pandaAvatar = document.getElementById('pandaAvatar');
+
+      var pandaChat = document.getElementById('pandaChat');
+      var pandaClose = document.getElementById('pandaClose');
+      var pandaBackToStudy = document.getElementById('pandaBackToStudy');
+
+      var stepSubject = document.getElementById('pandaStepSubject');
+      var stepAdvice = document.getElementById('pandaStepAdvice');
+      var stepMusicAsk = document.getElementById('pandaStepMusicAsk');
+      var stepMusicPick = document.getElementById('pandaStepMusicPick');
+
+      var pandaSubjectChoices = document.getElementById('pandaSubjectChoices');
+      var pandaAdvice = document.getElementById('pandaAdvice');
+      var pandaBye = document.getElementById('pandaBye');
+
+      var pandaMusicYes = document.getElementById('pandaMusicYes');
+      var pandaMusicNo = document.getElementById('pandaMusicNo');
+      var pandaSongSelect = document.getElementById('pandaSongSelect');
+      var pandaPlay = document.getElementById('pandaPlay');
+      var pandaAudio = document.getElementById('pandaAudio');
+      var pandaAudioMsg = document.getElementById('pandaAudioMsg');
+      var pandaLonger = document.getElementById('pandaLonger');
+
+      var subjects = [
+        { key: 'math', label: 'Mathematics' },
+        { key: 'science', label: 'Science' },
+        { key: 'computerscience', label: 'Computer Science' },
+        { key: 'english', label: 'English & Writing' },
+        { key: 'kpop', label: 'K‑Pop' }
+      ];
+
+      var adviceText = {
+        math: "You've got this! Remember: derive from definitions when you forget a formula. Use units like a sanity-check, and practice spacing problems to avoid cognitive overload.",
+        science: "Shine on, scientist! 🔬 Build concept maps from molecule → cell → tissue → organ. Use spaced recall and Feynman teach‑back for real understanding.",
+        computerscience: "Coder mode! 💻 Write tiny functions, trace line‑by‑line, and think about complexity (O(n), O(log n)).",
+        english: "Word wizard ✍️ Thesis → evidence → commentary. Read aloud to catch syntax cramps and swap weak verbs for strong ones.",
+        kpop: "Study + sparkle 🎶 Do 25–5 focus sprints, hydrate, and analyze lyrics (theme, tone, imagery) to stay in flow."
+      };
+
+      function show(el){ el.classList.remove('hidden'); }
+      function hide(el){ el.classList.add('hidden'); }
+      function resetSteps(){ [stepSubject, stepAdvice, stepMusicAsk, stepMusicPick].forEach(hide); }
+
+      subjects.forEach(function(s){
+        var b = document.createElement('button');
+        b.className = 'chip'; b.textContent = s.label; b.dataset.subj = s.key;
+        b.addEventListener('click', function(){
+          var t = adviceText[s.key] || 'Proud of you for showing up today!';
+          pandaAdvice.textContent = t;
+          resetSteps(); show(stepAdvice);
+        });
+        pandaSubjectChoices.appendChild(b);
+      });
+
+      function openPandaChat(){ document.querySelector('main').style.display = 'none'; pandaChat.style.display = 'flex'; resetSteps(); show(stepSubject); }
+      function closePandaChat(){ pandaChat.style.display = 'none'; document.querySelector('main').style.display = ''; pandaAudio.pause(); pandaAudio.src = ''; }
+
+      pandaMin.addEventListener('click', function(){ pandaBubble.style.display = 'none'; pandaShowBubble.style.display = 'inline-flex'; });
+      pandaShowBubble.addEventListener('click', function(){ pandaBubble.style.display = ''; pandaShowBubble.style.display = 'none'; });
+      pandaYes.addEventListener('click', openPandaChat);
+      pandaAvatar.addEventListener('click', openPandaChat);
+      pandaNo.addEventListener('click', function(){ pandaBubble.style.display = 'none'; });
+      pandaClose.addEventListener('click', closePandaChat);
+      pandaBackToStudy.addEventListener('click', closePandaChat);
+
+      pandaBye.addEventListener('click', function(){ resetSteps(); show(stepMusicAsk); });
+      pandaMusicNo.addEventListener('click', closePandaChat);
+      pandaMusicYes.addEventListener('click', function(){
+        pandaSongSelect.innerHTML = '';
+        studyData.filter(function(x){ return x.subject === 'kpop'; }).forEach(function(x){
+          var opt = document.createElement('option'); opt.value = x.title; opt.textContent = x.title; pandaSongSelect.appendChild(opt);
+        });
+        resetSteps(); show(stepMusicPick);
+      });
+
+      function splitArtistAndTrack(title){
+        var sep = ' – ';
+        var idx = title.indexOf(sep);
+        if(idx === -1){ sep = ' - '; idx = title.indexOf(sep); }
+        if(idx !== -1){ return { artist: title.slice(0, idx).trim(), track: title.slice(idx + sep.length).trim() }; }
+        return { artist: title.trim(), track: '' };
+      }
+
+      function findITunesPreview(query){
+        var url = 'https://itunes.apple.com/search?term=' + encodeURIComponent(query) + '&media=music&limit=1';
+        return fetch(url).then(function(res){ if(!res.ok) throw new Error('Search failed'); return res.json(); })
+                         .then(function(data){ if(data.results && data.results[0] && data.results[0].previewUrl){ return data.results[0].previewUrl; } throw new Error('No preview found'); });
+      }
+
+      var playlist = []; var currentIndex = 0;
+      function buildMixQueue(){
+        var titles = studyData.filter(function(x){return x.subject==='kpop';}).map(function(x){return x.title;});
+        var urls = []; var chain = Promise.resolve();
+        titles.slice(0,12).forEach(function(t){
+          chain = chain.then(function(){
+            var st = splitArtistAndTrack(t); var q = (st.artist + ' ' + st.track).trim();
+            return findITunesPreview(q).then(function(u){ if(u) urls.push(u); }).catch(function(){});
+          });
+        });
+        return chain.then(function(){ return urls; });
+      }
+
+      function playSelectedSong(){
+        pandaAudioMsg.textContent = '';
+        var title = pandaSongSelect.value;
+        var st = splitArtistAndTrack(title);
+        var query = (st.artist + ' ' + st.track).trim();
+        findITunesPreview(query).then(function(base){
+          if (pandaLonger.checked){
+            buildMixQueue().then(function(more){
+              playlist = [base].concat(more.filter(function(u){return u!==base;}));
+              currentIndex = 0; pandaAudio.loop = false;
+              function playIndex(i){ pandaAudio.src = playlist[i]; pandaAudio.play().catch(function(){}); }
+              pandaAudio.onended = function(){ currentIndex = (currentIndex + 1) % playlist.length; playIndex(currentIndex); };
+              playIndex(0);
+              pandaAudioMsg.textContent = 'Mix mode: rotating K‑pop previews for longer audio ';
+            });
+          } else {
+            pandaAudio.onended = null; pandaAudio.loop = false; pandaAudio.src = base; pandaAudio.play().then(function(){ pandaAudioMsg.textContent = 'Playing 30‑second preview.'; }).catch(function(){});
+          }
+        }).catch(function(){ pandaAudioMsg.textContent = 'Preview not available (region/CORS). Try another song, or keep it quiet for deep focus ✨'; });
+      }
+
+      pandaPlay.addEventListener('click', playSelectedSong);
+    })();
+  </script>
+
+</body>
+</html>
