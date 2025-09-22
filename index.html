@@ -875,8 +875,8 @@
     };
 
     const showQuizResults = () => {
-        quizContainer.classList.add('hidden');
-        quizResults.classList.remove('hidden');
+        quizContainer.style.display = 'block';
+        quizResults.style.display = 'block';
         quizScore.textContent = `You scored ${score} out of ${quizzesData[currentQuizId].questions.length}!`;
     };
 
@@ -925,6 +925,9 @@
     });
 
     redoQuizBtn.addEventListener('click', () => {
+        quizContainer.classList.add('hidden');
+        quizResults.classList.remove('hidden');
+        quizScore.text = " ";
         startQuiz(currentQuizId);
     });
 
@@ -1179,5 +1182,3 @@
 
 </body>
 </html>
-
-
