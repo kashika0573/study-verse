@@ -256,7 +256,7 @@
       // --- KPOP (fixed incorrect IDs) ---
       { subject: 'kpop', grade: 'all', title: 'TXT – CROWN', description: 'Debut hit that introduced TXT.', videoId: '-6xhgynDlYY&list=RD-6xhgynDlYY&start_radio=1', studyGuideUrl: 'https://ibighit.com/txt/eng/' },
       { subject: 'kpop', grade: 'all', title: 'BTS – Dynamite', description: 'Record-breaking disco-pop anthem.', videoId: 'gdZLi9oWNZg', studyGuideUrl: 'https://ibighit.com/bts/eng/' },
-      { subject: 'kpop', grade: 'all', title: 'Stray Kids – Ceremony', description: 'The bold song that came out in Stray Kids newest album, Karma.', videoId: '7sebIR0WGIE&list=RD7sebIR0WGIE&start_radio=1', studyGuideUrl: 'https://straykids.jype.com/' },
+      { subject: 'kpop', grade: 'all', title: 'Stray Kids – Chk Chk Boom', description: 'Their bold song that reached high in the charts.', videoId: 'T17AR8cVmto&list=RDT17AR8cVmto&start_radio=1', studyGuideUrl: 'https://straykids.jype.com/' },
       { subject: 'kpop', grade: 'all', title: 'SEVENTEEN – THUNDER', description: 'An upbeat, catchy track.', videoId: 'Ovn6WnYia08&list=RDOvn6WnYia08&start_radio=1', studyGuideUrl: 'https://seventeen-17.com/' },
       { subject: 'kpop', grade: 'all', title: 'EXO – Growl', description: 'Iconic song that pushed EXO into superstardom.', videoId: 'I3dezFzsNss', studyGuideUrl: 'https://exo.smtown.com/' },
       { subject: 'kpop', grade: 'all', title: 'TWS - Nice to See You Again', description: 'A nice feel good song.', videoId: 'LFNYLFnes4A', studyGuideUrl: 'https://tws-official.jp/' },
@@ -551,7 +551,7 @@
                 { question: 'What is the title of their debut album?', type: 'short-answer', answer: 'Border: Day One' },
                 { question: 'Which member is known as the "ice prince"?', type: 'short-answer', answer: 'Sunghoon' },
                 { question: 'Which member is from Australia?', type: 'multiple-choice', options: ['Jay', 'Jake', 'Sunoo', 'Jungwon'], answer: 'Jake' },
-                { question: 'Which member is known for his unique facial expressions?', type: 'short-answer', answer: 'Sunoo' }
+                { question: 'What was Enhypen 8th member, AKA the cactus?', type: 'short-answer', answer: 'Injang' }
             ]
         },
         'kpop_11': {
@@ -562,7 +562,7 @@
                 { question: 'What is their fandom name?', type: 'short-answer', answer: 'STAY' },
                 { question: 'What is the name of their official lightstick?', type: 'short-answer', answer: 'Nachimbong' },
                 { question: 'Which member is known for his signature deep voice?', type: 'multiple-choice', options: ['I.N', 'Felix', 'Han', 'Hyunjin'], answer: 'Felix' },
-                { question: 'What is the name of the producing unit in the group?', type: 'short-answer', answer: '3RACHA' },
+                { question: 'Whose member in the group was yesterday? (August 22nd, 2025)?', type: 'short-answer', answer: 'Seungmin' },
                 { question: 'What is their first full album called?', type: 'multiple-choice', options: ['GO LIVE', 'NOEASY', 'Oddinary', 'MAXIDENT'], answer: 'GO LIVE' },
                 { question: 'Which member is the youngest (maknae)?', type: 'short-answer', answer: 'I.N' },
                 { question: 'What is the title track of the "Oddinary" album?', type: 'short-answer', answer: 'Maniac' },
@@ -797,7 +797,7 @@
         }
 
         quizQuestion.textContent = `Question ${currentQuestionIndex + 1}/${quiz.questions.length}: ${questionData.question}`;
-        quizFeedback.textContent = '';
+        quizFeedback.classList.remove('hidden');
         nextQuestionBtn.disabled = true;
         nextQuestionBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
@@ -812,9 +812,11 @@
                 button.onclick = () => selectAnswer(button, option, questionData.answer);
                 quizOptions.appendChild(button);
             });
+            
         } else {
-            quizOptions.classList.add('hidden');
             quizShortAnswer.classList.remove('hidden');
+            quizOptions.classList.add('hidden');
+            quizOptions.innerHTML = '';
             shortAnswerInput.value = '';
             shortAnswerInput.oninput = () => {
                 const userAnswer = shortAnswerInput.value.trim().toLowerCase();
@@ -833,6 +835,7 @@
         const options = document.querySelectorAll('#quizOptions button');
         options.forEach(button => {
             button.disabled = true;
+
             if (button.textContent.toLowerCase() === correctAnswer.toLowerCase()) {
                 button.classList.remove('bg-slate-700', 'hover:bg-slate-600');
                 button.classList.add('bg-green-500', 'text-white');
@@ -852,25 +855,34 @@
             quizFeedback.classList.remove('text-green-500');
             quizFeedback.classList.add('text-red-500');
         }
-
+        
         nextQuestionBtn.disabled = false;
         nextQuestionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     };
 
     const submitShortAnswer = () => {
+        quizOptions.classList.remove('hidden');
+        quizOptions.innerHTML = '';
+
         const questionData = quizzesData[currentQuizId].questions[currentQuestionIndex];
         const userAnswer = shortAnswerInput.value.trim().toLowerCase();
         const correctAnswer = questionData.answer.trim().toLowerCase();
+
+        
 
         if (userAnswer === correctAnswer) {
             score++;
             quizFeedback.textContent = "Correct!";
             quizFeedback.classList.remove('text-red-500');
             quizFeedback.classList.add('text-green-500');
+            //nextQuestionBtn.disabled = false;
+
         } else {
             quizFeedback.textContent = `Incorrect. The correct answer was: "${questionData.answer}".`;
             quizFeedback.classList.remove('text-green-500');
             quizFeedback.classList.add('text-red-500');
+           // nextQuestionBtn.disabled = false;
+
         }
     };
 
@@ -926,8 +938,10 @@
 
     redoQuizBtn.addEventListener('click', () => {
         quizContainer.classList.add('hidden');
-        quizResults.classList.remove('hidden');
-        quizScore.text = " ";
+        quizResults.classList.add('hidden');
+        quizResults.innerHTML = '';
+        quizFeedback.textContent = " ";
+        quizScore.textContent = " ";
         startQuiz(currentQuizId);
     });
 
@@ -1181,8 +1195,4 @@
   </script>
 
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 534c133305241e158238286ad6015c5576d23525
