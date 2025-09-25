@@ -85,6 +85,94 @@
     .audio-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
     .audio-row select{background:#111827;color:#e5e7eb;border:1px solid #374151;border-radius:.5rem;padding:.5rem .75rem}
 
+    /*Creating a profile + CHECK*/
+    import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export default function UserProfileForm() {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    bio: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("User Profile Created:", formData);
+    alert("Profile created successfully!");
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-md shadow-lg rounded-2xl">
+        <CardContent className="p-6">
+          <h1 className="text-2xl font-bold mb-4 text-center">Create Your Profile</h1>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Enter a username"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="bio">Bio</Label>
+              <Input
+                id="bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                placeholder="Tell us about yourself"
+              />
+            </div>
+
+            <Button type="submit" className="w-full mt-4">Create Profile</Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
     /* Quiz-specific styles */
     .quiz-question-container {
         display: none;
