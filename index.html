@@ -93,7 +93,7 @@
     .quiz-card { transition: background-color 0.2s ease-in-out; }
 
     /* ===== Login Overlay ===== */
-    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:80}
+    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center;z-index:80}
     #loginCard{width:100%;max-width:460px}
   </style>
 </head>
@@ -111,7 +111,8 @@
   </div>
 
   <!-- ===== Login Overlay ===== -->
-  <div id="loginOverlay" class="hidden">
+  <div id="loginOverlay"
+     class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-80">
     <div id="loginCard" class="glass-container rounded-2xl p-6 shadow-2xl">
       <h2 class="text-2xl font-bold text-white mb-1">Sign in to Study Verse</h2>
       <p class="text-slate-400 mb-6">Create a quick local profile so I can greet you </p>
@@ -267,69 +268,80 @@
   </div>
 
   <script>
+    //function open login and close login -kashika edited//
+    function openLogin(){
+      loginOverlay.classList.remove('hidden');
+    }
+    function closeLogin(){
+      loginOverlay.classList.add('hidden');
+    }
     // ---------- Simple local auth using localStorage ----------
-    const LS_KEY = 'studyVerseUser';
-    const greetingEl = document.getElementById('userGreeting');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginOverlay = document.getElementById('loginOverlay');
-    const loginForm = document.getElementById('loginForm');
-    const loginUsername = document.getElementById('loginUsername');
-    const loginPassword = document.getElementById('loginPassword');
-    const rememberMe = document.getElementById('rememberMe');
+  // ---------- Simple local auth using localStorage ----------
+  const LS_KEY = 'studyVerseUser';
+  const greetingEl = document.getElementById('userGreeting');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const loginOverlay = document.getElementById('loginOverlay');
+  const loginForm = document.getElementById('loginForm');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPassword = document.getElementById('loginPassword');
+  const rememberMe = document.getElementById('rememberMe');
 
-    function setGreeting(name){
-      greetingEl.textContent = `Hello, ${name}!`;
-      logoutBtn.classList.remove('hidden');
-    }
+  function setGreeting(name){
+    greetingEl.textContent = `Hello, ${name}!`;
+    logoutBtn.classList.remove('hidden');
+  }
+  function openLogin(){ loginOverlay.classList.remove('hidden'); }
+  function closeLogin(){ loginOverlay.classList.add('hidden'); }
 
-    function openLogin(){ loginOverlay.classList.remove('hidden'); }
-    function closeLogin(){ loginOverlay.classList.add('hidden'); }
+  function encode(p){ try { return btoa(unescape(encodeURIComponent(p))); } catch { return p; } }
+  function decode(p){ try { return decodeURIComponent(escape(atob(p))); } catch { return p; } }
+  function getUser(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  function saveUser(user){ localStorage.setItem(LS_KEY, JSON.stringify(user)); }
+  function logout(){ localStorage.removeItem(LS_KEY); location.reload(); }
 
-    function encode(p){ // super-light obfuscation (not secure)
-      try { return btoa(unescape(encodeURIComponent(p))); } catch { return p; }
-    }
-
-    function decode(p){
-      try { return decodeURIComponent(escape(atob(p))); } catch { return p; }
-    }
-
-    function getUser(){
-      const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return null;
-      try { return JSON.parse(raw); } catch { return null; }
-    }
-
-    function saveUser(user){ localStorage.setItem(LS_KEY, JSON.stringify(user)); }
-
-    function logout(){ localStorage.removeItem(LS_KEY); location.reload(); }
-
+  // ✅ Bind everything after DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', logout);
 
-    // On load: if user is present, greet; otherwise ask to sign in
-    document.addEventListener('DOMContentLoaded', () => {
-      const u = getUser();
-      if(u && u.username){ setGreeting(u.username); }
-      else { openLogin(); }
+    // Show login or greet immediately
+    const u = getUser();
+    if(u && u.username){ setGreeting(u.username); }
+    else { openLogin(); }
+
+    // Explicit Enter-key support so it ALWAYS works
+    [loginUsername, loginPassword].forEach((el) => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // Modern, safe way to trigger form submit + submit handler
+          loginForm.requestSubmit();
+        }
+      });
     });
 
-    // Handle login submit
+    // Submit handler
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const username = loginUsername.value.trim();
       const password = loginPassword.value.trim();
-      if(!username || !password){ return; }
-      const user = {
+      if(!username || !password) return;
+
+      saveUser({
         username,
-        // storing a reversible-encoded string to discourage casual peeking; not real security
-        password: encode(password),
+        password: encode(password),   // not real security—just obfuscation
         remembered: !!rememberMe.checked,
         ts: Date.now()
-      };
-      saveUser(user);
+      });
+
       setGreeting(username);
       closeLogin();
     });
-  </script>
+  });
+</script>
 
   <script>
     // ---------- Content database ----------
