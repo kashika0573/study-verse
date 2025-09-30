@@ -147,7 +147,50 @@
     <div class="flex justify-center mb-6">
       <button id="homeTab" class="py-2 px-4 rounded-t-lg font-bold text-lg bg-pink-500 text-white transition-colors duration-300">Study</button>
       <button id="quizzesTab" class="py-2 px-4 rounded-t-lg font-bold text-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors duration-300">Quizzes</button>
+      <button id="notesTab" class="py-2 px-4 rounded-t-lg font-bold text-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors duration-300">Notes</button>
     </div>
+<!-- Notes Section -->
+<section id="notesPage" class="glass-container rounded-2xl p-6 md:p-8 shadow-2xl hidden">
+  <h2 class="text-3xl font-bold text-white text-center mb-6">My Notes</h2>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div>
+      <label for="notesSubject" class="block mb-2 text-sm font-medium text-pink-300">Subject</label>
+      <select id="notesSubject" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+        <option value="math">Mathematics</option>
+        <option value="science">Science</option>
+        <option value="computerscience">Computer Science</option>
+        <option value="english">English & Writing</option>
+        <option value="history">History</option>
+        <option value="kpop">K-Pop</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="notesGrade" class="block mb-2 text-sm font-medium text-pink-300">Grade Level</label>
+      <select id="notesGrade" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+        <option value="9">9th Grade</option>
+        <option value="10">10th Grade</option>
+        <option value="11">11th Grade</option>
+        <option value="12">12th Grade</option>
+        <option value="all">All Grades</option>
+      </select>
+    </div>
+
+    <div class="flex items-end">
+      <button id="saveNotesBtn" class="w-full bg-pink-500 text-white font-semibold py-3 rounded-lg hover:bg-pink-600 transition">
+        Save Notes
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <label for="notesText" class="block mb-2 text-sm font-medium text-pink-300">Your Notes</label>
+    <textarea id="notesText" rows="10" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-4 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition placeholder:text-slate-500" placeholder="Type anything you want to remember for this subject + grade..."></textarea>
+    <div id="notesStatus" class="text-xs text-slate-400 mt-2 h-4"></div>
+  </div>
+</section>
+
 
     <main id="homepage" class="glass-container rounded-2xl p-6 md:p-8 shadow-2xl">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -820,6 +863,14 @@
     const quizResults = document.getElementById('quizResults');
     const quizScore = document.getElementById('quizScore');
     const redoQuizBtn = document.getElementById('redoQuizBtn');
+    // Notes DOM
+    const notesTab = document.getElementById('notesTab');
+    const notesPage = document.getElementById('notesPage');
+    const notesSubject = document.getElementById('notesSubject');
+    const notesGrade = document.getElementById('notesGrade');
+    const notesText = document.getElementById('notesText');
+    const saveNotesBtn = document.getElementById('saveNotesBtn');
+    const notesStatus = document.getElementById('notesStatus');
 
     let currentQuizId = null;
     let currentQuestionIndex = 0;
@@ -1081,6 +1132,44 @@
         quizResults.style.display = 'block';
         quizScore.textContent = `You scored ${score} out of ${quizzesData[currentQuizId].questions.length}!`;
     };
+    // ===== Notes storage (per user, per subject+grade) =====
+const LS_NOTES = 'studyVerseNotes';
+
+function getNotesDB() {
+  try { return JSON.parse(localStorage.getItem(LS_NOTES) || '{}'); }
+  catch { return {}; }
+}
+function setNotesDB(db) {
+  localStorage.setItem(LS_NOTES, JSON.stringify(db));
+}
+function currentUserName() {
+  const u = getUser?.();
+  return u?.username || null;
+}
+function noteKey() {
+  return `${notesSubject.value}_${notesGrade.value}`;
+}
+function loadNotesIntoUI() {
+  const user = currentUserName();
+  if (!user) { openLogin(); return; }
+  const db = getNotesDB();
+  const userNotes = db[user] || {};
+  notesText.value = userNotes[noteKey()] || '';
+}
+function saveNotesFromUI() {
+  const user = currentUserName();
+  if (!user) { openLogin(); return; }
+  const db = getNotesDB();
+  db[user] = db[user] || {};
+  db[user][noteKey()] = notesText.value;
+  setNotesDB(db);
+  flashSaved();
+}
+function flashSaved() {
+  notesStatus.textContent = 'Saved!';
+  setTimeout(() => (notesStatus.textContent = ''), 1200);
+}
+
 
     // ---------- Event listeners ----------
     subjectSelector.addEventListener('change', displayLinks);
@@ -1089,13 +1178,28 @@
     closeModal.addEventListener('click', closeVideoModal);
     videoModal.addEventListener('click', (event) => { if (event.target === videoModal) closeVideoModal(); });
 
-    homeTab.addEventListener('click', () => {
-        homepage.classList.remove('hidden');
-        quizzesPage.classList.add('hidden');
-        homeTab.classList.add('bg-pink-500', 'text-white');
-        quizzesTab.classList.remove('bg-pink-500', 'text-white');
-        quizzesTab.classList.add('bg-slate-800', 'text-slate-400');
-    });
+    function showTab(which) {
+  homepage.classList.toggle('hidden', which !== 'home');
+  quizzesPage.classList.toggle('hidden', which !== 'quizzes');
+  notesPage.classList.toggle('hidden', which !== 'notes');
+
+  const active = 'bg-pink-500 text-white';
+  const inactive = 'bg-slate-800 text-slate-400';
+  [[homeTab,'home'],[quizzesTab,'quizzes'],[notesTab,'notes']].forEach(([btn,name])=>{
+    btn.classList.toggle('bg-pink-500', which===name);
+    btn.classList.toggle('text-white', which===name);
+    btn.classList.toggle('bg-slate-800', which!==name);
+    btn.classList.toggle('text-slate-400', which!==name);
+  });
+}
+
+homeTab.addEventListener('click', () => showTab('home'));
+quizzesTab.addEventListener('click', () => showTab('quizzes'));
+notesTab.addEventListener('click', () => {
+  showTab('notes');
+  loadNotesIntoUI();
+});
+
 
     quizzesTab.addEventListener('click', () => {
         homepage.classList.add('hidden');
@@ -1134,6 +1238,17 @@
         quizScore.textContent = " ";
         startQuiz(currentQuizId);
     });
+    // Notes
+    notesSubject.addEventListener('change', loadNotesIntoUI);
+    notesGrade.addEventListener('change', loadNotesIntoUI);
+    saveNotesBtn.addEventListener('click', saveNotesFromUI);
+
+    let notesSaveTimer;
+    notesText?.addEventListener('input', () => {
+      clearTimeout(notesSaveTimer);
+      notesSaveTimer = setTimeout(saveNotesFromUI, 800);
+});
+
 
     // Initial render
     displayLinks();
